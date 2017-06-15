@@ -17,6 +17,7 @@ public class SparkContextResource
 		{
 			session = SparkSession.builder()
 					.appName("io.greennav.persistence.DatabaseApplication")
+					.master("local")
 					.getOrCreate();
 		}
 		if(sqlContext == null)
