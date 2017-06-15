@@ -36,18 +36,18 @@ dependencies {
     compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
 }
 
-artifacts {
-    archives jar
-}
+//artifacts {
+//    archives jar
+//}
 
-distZip.shouldRunAfter(build)
+//distZip.shouldRunAfter(build)
 
-jar {
-    manifest {
-        attributes ('Main-Class': 'io.greennav.persistence.DatabaseApplication')
-    }
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    zip64 = true
-}
+//jar {
+//    manifest {
+//        attributes ('Main-Class': 'io.greennav.persistence.DatabaseApplication')
+//    }
+//    from {
+//        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+//    }
+//    zip64 = true
+//}

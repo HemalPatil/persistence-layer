@@ -16,5 +16,6 @@ public class DatabaseApplication
 		Dataset<Row> df = sqlContext.read().
 				parquet(DatabaseApplication.class.getClassLoader().getResource("berlin-latest.osm.pbf.relation.parquet").getFile());
 		df.printSchema();
+		df.show();df.
 	}
 }
