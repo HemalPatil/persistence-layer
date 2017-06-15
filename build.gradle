@@ -2,6 +2,7 @@ group 'io.greennav'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'java-library-distribution'
 apply plugin: 'com.google.protobuf'
 
 sourceCompatibility = 1.8
@@ -33,4 +34,20 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile 'io.grpc:grpc-stub:1.0.0-pre2'
     compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
+}
+
+artifacts {
+    archives jar
+}
+
+distZip.shouldRunAfter(build)
+
+jar {
+    manifest {
+        attributes ('Main-Class': 'io.greennav.persistence.DatabaseApplication')
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    zip64 = true
 }
