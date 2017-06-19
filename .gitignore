@@ -26,3 +26,5 @@ hs_err_pid*
 build/
 out/
 *.parquet
+metastore_db/
+derby.log
