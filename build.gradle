@@ -46,25 +46,9 @@ dependencies {
 
 task fatJar(type: Jar) {
     baseName = project.name + '-all'
-    manifest { attributes 'Main-Class': 'DatabaseApplication'}
+    manifest { attributes 'Main-Class': 'io.greennav.persistence.DatabaseApplication'}
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
     zip64 = true
     with jar
 }
-
-//artifacts {
-//    archives jar
-//}
-//
-//distZip.shouldRunAfter(build)
-//
-//jar {
-//    manifest {
-//        attributes 'Main-Class': 'io.greennav.persistence.DatabaseApplication'
-//    }
-//    from {
-//        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-//    }
-//    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
-//    zip64 = true
-//}
