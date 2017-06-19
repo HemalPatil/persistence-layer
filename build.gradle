@@ -4,21 +4,21 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'java-library-distribution'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
 
 sourceCompatibility = 1.8
 def sparkVersion = '2.1.0'
 
 repositories {
-    maven {
-        url "http://repo1.maven.org/maven2/"
-    }
+    maven { url 'http://repo1.maven.org/maven2/' }
+    maven { url 'http://mvn.topobyte.de' }
 }
 
 buildscript {
     repositories {
-        maven {
-            url "http://repo1.maven.org/maven2/"
-        }
+        maven { url 'http://repo1.maven.org/maven2/' }
+        maven { url 'http://mvn.topobyte.de' }
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
@@ -30,24 +30,41 @@ dependencies {
 
     compile group: 'org.apache.spark', name: 'spark-sql_2.10', version: sparkVersion
     compile group: 'org.apache.parquet', name: 'parquet-avro', version: '1.9.0'
+    compile group: 'org.apache.avro', name: 'avro', version: '1.8.2'
+
+    compile 'com.databricks:spark-avro_2.10:3.2.0'
 
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile 'io.grpc:grpc-stub:1.0.0-pre2'
     compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
+
+    compile('de.topobyte:osm4j-core:0.0.20') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+    }
+}
+
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    manifest { attributes 'Main-Class': 'DatabaseApplication'}
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    zip64 = true
+    with jar
 }
 
 //artifacts {
 //    archives jar
 //}
-
+//
 //distZip.shouldRunAfter(build)
-
+//
 //jar {
 //    manifest {
-//        attributes ('Main-Class': 'io.greennav.persistence.DatabaseApplication')
+//        attributes 'Main-Class': 'io.greennav.persistence.DatabaseApplication'
 //    }
 //    from {
 //        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 //    }
+//    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
 //    zip64 = true
 //}
