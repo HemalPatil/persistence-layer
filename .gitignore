@@ -27,4 +27,3 @@ build/
 out/
 *.parquet
 metastore_db/
-derby.log

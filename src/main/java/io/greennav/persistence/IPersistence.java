@@ -18,11 +18,11 @@ public interface IPersistence
 //
 //	public void writeRelation(Relation relation);
 
-	public Node getNodeById(long id) throws Exception;
+	Node getNodeById(long id);
 
-//	public Way getWayById(long id);
-//
-//	public Relation getRelationById(long id);
+	Way getWayById(long id);
+
+	Relation getRelationById(long id);
 //
 //	public Collection<Node> queryNodes(String key, String value);
 //
