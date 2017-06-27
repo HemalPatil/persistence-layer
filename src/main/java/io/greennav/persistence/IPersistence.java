@@ -23,12 +23,16 @@ public interface IPersistence
 	Way getWayById(long id);
 
 	Relation getRelationById(long id);
-//
-//	public Collection<Node> queryNodes(String key, String value);
-//
-//	public Collection<Way> queryEdges(String key, String value);
-//
-//	public Collection<Relation> queryRelations(String key, String value);
-//
-//	public Set<Node> getNeighbors(Node node);
+
+	Collection<Node> queryNodes(String key, String value);
+
+	Collection<Node> queryNodesWithinRange(String key, String value, double longitude, double latitude, double metres);
+
+	Collection<Way> queryEdges(String key, String value);
+
+	Collection<Way> queryEdgesWithinRange(String key, String value, double longitude, double latitude, double metres);
+
+	Collection<Relation> queryRelations(String key, String value);
+
+	Set<Node> getNeighbors(Node node);
 }
