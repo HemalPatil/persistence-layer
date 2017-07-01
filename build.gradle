@@ -34,6 +34,8 @@ dependencies {
     compile group: 'org.postgresql', name: 'postgresql', version: '42.0.0'
     compile group: 'net.postgis', name: 'postgis-jdbc', version: '2.2.1'
 
+    compile group: 'log4j', name: 'log4j', version: '1.2.16'
+
     compile('de.topobyte:osm4j-core:0.0.20') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
         exclude group: 'org.slf4j', module: 'slf4j-api'

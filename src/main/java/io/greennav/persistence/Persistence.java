@@ -4,6 +4,7 @@ import de.topobyte.osm4j.core.model.iface.EntityType;
 import de.topobyte.osm4j.core.model.impl.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import gnu.trove.list.array.TLongArrayList;
+import org.apache.log4j.Logger;
 import org.postgis.LineString;
 import org.postgis.PGgeometry;
 import org.postgis.Point;
@@ -41,64 +42,75 @@ public class Persistence implements IPersistence
 	private static HashMap<Long, Node> nodeCache = null;
 	private static Node cacheCenter = null;
 
-	private static Persistence application = null;
+	private static Persistence persistence = null;
+	private static Logger logger = null;
 
 	private Persistence() {};
 
-	public static Persistence getInstance()
+	public static Persistence getInstance(Logger x)
 	{
-		if(application == null)
+		if(persistence == null)
 		{
-			application = new Persistence();
+			persistence = new Persistence();
+			logger = x;
+			logger.info("Persistence instance created");
 		}
-		return application;
+		return persistence;
 	}
 
 	public Persistence host(String host)
 	{
 		Persistence.host = host;
+		logger.info("Persistence host set to " + host);
 		return this;
 	}
 
 	public Persistence databaseName(String name)
 	{
 		Persistence.databaseName = name;
+		logger.info("Persistence database set to " + databaseName);
 		return this;
 	}
 
 	public Persistence user(String user)
 	{
 		Persistence.user = user;
+		logger.info("Persistence user set to " + user);
 		return this;
 	}
 
 	public Persistence password(String password)
 	{
 		Persistence.password = password;
+		logger.info("Persistence password set to " + password);
 		return this;
 	}
 
 	public Persistence enableCache(boolean e)
 	{
 		Persistence.cacheEnabled = e;
+		logger.info("Persistence cache enabled " + cacheEnabled);
 		return this;
 	}
 
 	public Persistence queryLimit(int x)
 	{
 		Persistence.queryLimit = x;
+		logger.info("Persistence query limit set to " + queryLimit);
 		return this;
 	}
 
 	public Persistence cacheLimit(int x)
 	{
 		Persistence.cacheLimit = x;
+		logger.info("Persistence cache limit set to " + cacheLimit);
 		return this;
 	}
 
-	public Persistence cacheRange(double x)
+	public Persistence cacheRange(double metres)
 	{
-		Persistence.cacheRange = x;
+		Persistence.cacheRange = metres;
+		logger.info("Persistence cache range set to " + cacheRange);
 		return this;
 	}
 
@@ -110,9 +122,12 @@ public class Persistence implements IPersistence
 
 	public void connect() throws SQLException
 	{
-		nodeCache = new HashMap<>(100);
+		nodeCache = new HashMap<>(cacheLimit);
+		logger.info("Created node cache of size " + cacheLimit);
 		String url = protocol + "://" + host + "/" + databaseName;
+		logger.info("Trying to connect to database with " + url);
 		connection = DriverManager.getConnection(url, user, password);
+		logger.info("Connected to database");
 		s = connection.createStatement();
 	}
 
@@ -489,7 +504,7 @@ public class Persistence implements IPersistence
 	{
 		try
 		{
-			Persistence p = Persistence.getInstance()
+			Persistence p = Persistence.getInstance(Logger.getLogger(DatabaseApplication.class.getName()))
 					.databaseName("greennavdb")
 					.user("greennav")
 					.password("testpassword")
