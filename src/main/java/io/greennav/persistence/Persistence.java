@@ -5,9 +5,14 @@ import de.topobyte.osm4j.core.model.impl.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import gnu.trove.list.array.TLongArrayList;
 import org.apache.log4j.Logger;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.SQLContext;
 import org.postgis.LineString;
 import org.postgis.PGgeometry;
 import org.postgis.Point;
+import scala.collection.Seq;
 
 import java.sql.*;
 import java.util.*;
@@ -19,11 +24,11 @@ import java.util.*;
 // TODO: add logs
 public class Persistence implements IPersistence
 {
-//	public enum CacheType
-//	{
-//		nodeCentric,
-//		includeAll
-//	}
+	public enum CacheType
+	{
+		nodeCentric,
+		includeAll
+	}
 
 	private static String protocol = "jdbc:postgresql";
 	private static String host = "localhost:5432";
@@ -34,7 +39,7 @@ public class Persistence implements IPersistence
 	private static int queryLimit = 500;
 	private static int cacheLimit = 100;
 	private static double cacheRange = 100;
-//	private static CacheType cacheType = CacheType.nodeCentric;
+	private static CacheType cacheType = CacheType.nodeCentric;
 
 	private static Connection connection = null;
 	private static Statement s = null;
@@ -114,11 +119,11 @@ public class Persistence implements IPersistence
 		return this;
 	}
 
-//	public Persistence cacheType(CacheType x)
-//	{
-//		Persistence.cacheType = x;
-//		return this;
-//	}
+	public Persistence cacheType(CacheType x)
+	{
+		Persistence.cacheType = x;
+		return this;
+	}
 
 	public void connect() throws SQLException
 	{

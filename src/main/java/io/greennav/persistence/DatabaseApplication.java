@@ -1,6 +1,8 @@
 package io.greennav.persistence;
 
 import org.apache.log4j.Logger;
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 
 import java.io.*;
 import java.sql.SQLException;
