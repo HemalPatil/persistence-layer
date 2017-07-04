@@ -4,44 +4,8 @@ package io.greennav.persistence.osmpbf;
 option java_package = "io.greennav.persistence.pbfparser";
 option java_outer_classname = "OsmFormat";
 
-/* OSM Binary file format
-
-This is the master schema file of the OSM binary file format. This
-file is designed to support limited random-access and future
-extendability.
-
-A binary OSM file consists of a sequence of FileBlocks (please see
-fileformat.proto). The first fileblock contains a serialized instance
-of HeaderBlock, followed by a sequence of PrimitiveBlock blocks that
-contain the primitives.
-
-Each primitiveblock is designed to be independently parsable. It
-contains a string table storing all strings in that block (keys and
-values in tags, roles in relations, usernames, etc.) as well as
-metadata containing the precision of coordinates or timestamps in that
-block.
-
-A primitiveblock contains a sequence of primitive groups, each
-containing primitives of the same type (nodes, densenodes, ways,
-relations). Coordinates are stored in signed 64-bit integers. Lat&lon
-are measured in units <granularity> nanodegrees. The default of
-granularity of 100 nanodegrees corresponds to about 1cm on the ground,
-and a full lat or lon fits into 32 bits.
-
-Converting an integer to a lattitude or longitude uses the formula:
-$OUT = IN * granularity / 10**9$. Many encoding schemes use delta
-coding when representing nodes and relations.
-
-*/
-
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
-/* Contains the file header. */
-
 message HeaderBlock {
   optional HeaderBBox bbox = 1;
-  /* Additional tags to aid in parsing this dataset */
   repeated string required_features = 4;
   repeated string optional_features = 5;
 
@@ -74,11 +38,6 @@ message HeaderBBox {
    required sint64 bottom = 4;
 }
 
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-
 message PrimitiveBlock {
   required StringTable stringtable = 1;
   repeated PrimitiveGroup primitivegroup = 2;
@@ -106,13 +65,6 @@ message PrimitiveGroup {
   repeated ChangeSet changesets = 5;
 }
 
-
-/** String table, contains the common strings in each block.
-
- Note that we reserve index '0' as a delimiter, so the entry at that
- index in the table is ALWAYS blank and unused.
-
- */
 message StringTable {
    repeated bytes s = 1;
 }
@@ -124,53 +76,20 @@ message Info {
    optional int64 changeset = 3;
    optional int32 uid = 4;
    optional uint32 user_sid = 5; // String IDs
-
-   // The visible flag is used to store history information. It indicates that
-   // the current object version has been created by a delete operation on the
-   // OSM API.
-   // When a writer sets this flag, it MUST add a required_features tag with
-   // value "HistoricalInformation" to the HeaderBlock.
-   // If this flag is not available for some object it MUST be assumed to be
-   // true if the file has the required_features tag "HistoricalInformation"
-   // set.
    optional bool visible = 6;
 }
 
-/** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. */
 message DenseInfo {
    repeated int32 version = 1 [packed = true];
    repeated sint64 timestamp = 2 [packed = true]; // DELTA coded
    repeated sint64 changeset = 3 [packed = true]; // DELTA coded
    repeated sint32 uid = 4 [packed = true]; // DELTA coded
    repeated sint32 user_sid = 5 [packed = true]; // String IDs for usernames. DELTA coded
-
-   // The visible flag is used to store history information. It indicates that
-   // the current object version has been created by a delete operation on the
-   // OSM API.
-   // When a writer sets this flag, it MUST add a required_features tag with
-   // value "HistoricalInformation" to the HeaderBlock.
-   // If this flag is not available for some object it MUST be assumed to be
-   // true if the file has the required_features tag "HistoricalInformation"
-   // set.
    repeated bool visible = 6 [packed = true];
 }
 
-
-// THIS IS STUB DESIGN FOR CHANGESETS. NOT USED RIGHT NOW.
-// TODO:    REMOVE THIS?
 message ChangeSet {
    required int64 id = 1;
-//
-//   // Parallel arrays.
-//   repeated uint32 keys = 2 [packed = true]; // String IDs.
-//   repeated uint32 vals = 3 [packed = true]; // String IDs.
-//
-//   optional Info info = 4;
-
-//   optional int64 created_at = 8;
-//   optional int64 closetime_delta = 9;
-//   optional bool open = 10;
-//   optional HeaderBBox bbox = 11;
 }
 
 
@@ -185,18 +104,6 @@ message Node {
    required sint64 lat = 8;
    required sint64 lon = 9;
 }
-
-/* Used to densly represent a sequence of nodes that do not have any tags.
-
-We represent these nodes columnwise as five columns: ID's, lats, and
-lons, all delta coded. When metadata is not omitted,
-
-We encode keys & vals for all nodes as a single array of integers
-containing key-stringid and val-stringid, using a stringid of 0 as a
-delimiter between nodes.
-
-   ( (<keyid> <valid>)* '0' )*
- */
 
 message DenseNodes {
    repeated sint64 id = 1 [packed = true]; // DELTA coded

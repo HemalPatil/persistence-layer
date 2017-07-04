@@ -5,14 +5,9 @@ import de.topobyte.osm4j.core.model.impl.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import gnu.trove.list.array.TLongArrayList;
 import org.apache.log4j.Logger;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.SQLContext;
 import org.postgis.LineString;
 import org.postgis.PGgeometry;
 import org.postgis.Point;
-import scala.collection.Seq;
 
 import java.sql.*;
 import java.util.*;
