@@ -32,35 +32,19 @@ public final class OsmFormat {
     io.greennav.persistence.pbfparser.OsmFormat.HeaderBBoxOrBuilder getBboxOrBuilder();
 
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     java.util.List<java.lang.String>
         getRequiredFeaturesList();
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     int getRequiredFeaturesCount();
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     java.lang.String getRequiredFeatures(int index);
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     com.google.protobuf.ByteString
@@ -352,10 +336,6 @@ public final class OsmFormat {
     public static final int REQUIRED_FEATURES_FIELD_NUMBER = 4;
     private com.google.protobuf.LazyStringList requiredFeatures_;
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     public com.google.protobuf.ProtocolStringList
@@ -363,30 +343,18 @@ public final class OsmFormat {
       return requiredFeatures_;
     }
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     public int getRequiredFeaturesCount() {
       return requiredFeatures_.size();
     }
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     public java.lang.String getRequiredFeatures(int index) {
       return requiredFeatures_.get(index);
     }
     /**
-     * <pre>
-     * Additional tags to aid in parsing this dataset 
-     * </pre>
-     *
      * <code>repeated string required_features = 4;</code>
      */
     public com.google.protobuf.ByteString
@@ -1252,10 +1220,6 @@ public final class OsmFormat {
          }
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public com.google.protobuf.ProtocolStringList
@@ -1263,30 +1227,18 @@ public final class OsmFormat {
         return requiredFeatures_.getUnmodifiableView();
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public int getRequiredFeaturesCount() {
         return requiredFeatures_.size();
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public java.lang.String getRequiredFeatures(int index) {
         return requiredFeatures_.get(index);
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public com.google.protobuf.ByteString
@@ -1294,10 +1246,6 @@ public final class OsmFormat {
         return requiredFeatures_.getByteString(index);
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public Builder setRequiredFeatures(
@@ -1311,10 +1259,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public Builder addRequiredFeatures(
@@ -1328,10 +1272,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public Builder addAllRequiredFeatures(
@@ -1343,10 +1283,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public Builder clearRequiredFeatures() {
@@ -1356,10 +1292,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * Additional tags to aid in parsing this dataset 
-       * </pre>
-       *
        * <code>repeated string required_features = 4;</code>
        */
       public Builder addRequiredFeaturesBytes(
@@ -6178,12 +6110,6 @@ public final class OsmFormat {
     com.google.protobuf.ByteString getS(int index);
   }
   /**
-   * <pre>
-   ** String table, contains the common strings in each block.
-   *Note that we reserve index '0' as a delimiter, so the entry at that
-   *index in the table is ALWAYS blank and unused.
-   * </pre>
-   *
    * Protobuf type {@code io.greennav.persistence.osmpbf.StringTable}
    */
   public  static final class StringTable extends
@@ -6432,12 +6358,6 @@ public final class OsmFormat {
       return builder;
     }
     /**
-     * <pre>
-     ** String table, contains the common strings in each block.
-     *Note that we reserve index '0' as a delimiter, so the entry at that
-     *index in the table is ALWAYS blank and unused.
-     * </pre>
-     *
      * Protobuf type {@code io.greennav.persistence.osmpbf.StringTable}
      */
     public static final class Builder extends
@@ -6760,32 +6680,10 @@ public final class OsmFormat {
     int getUserSid();
 
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>optional bool visible = 6;</code>
      */
     boolean hasVisible();
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>optional bool visible = 6;</code>
      */
     boolean getVisible();
@@ -6983,34 +6881,12 @@ public final class OsmFormat {
     public static final int VISIBLE_FIELD_NUMBER = 6;
     private boolean visible_;
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>optional bool visible = 6;</code>
      */
     public boolean hasVisible() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>optional bool visible = 6;</code>
      */
     public boolean getVisible() {
@@ -7612,51 +7488,18 @@ public final class OsmFormat {
 
       private boolean visible_ ;
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>optional bool visible = 6;</code>
        */
       public boolean hasVisible() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>optional bool visible = 6;</code>
        */
       public boolean getVisible() {
         return visible_;
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>optional bool visible = 6;</code>
        */
       public Builder setVisible(boolean value) {
@@ -7666,17 +7509,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>optional bool visible = 6;</code>
        */
       public Builder clearVisible() {
@@ -7852,56 +7684,19 @@ public final class OsmFormat {
     int getUserSid(int index);
 
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     java.util.List<java.lang.Boolean> getVisibleList();
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     int getVisibleCount();
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     boolean getVisible(int index);
   }
   /**
-   * <pre>
-   ** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. 
-   * </pre>
-   *
    * Protobuf type {@code io.greennav.persistence.osmpbf.DenseInfo}
    */
   public  static final class DenseInfo extends
@@ -8283,17 +8078,6 @@ public final class OsmFormat {
     public static final int VISIBLE_FIELD_NUMBER = 6;
     private java.util.List<java.lang.Boolean> visible_;
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     public java.util.List<java.lang.Boolean>
@@ -8301,34 +8085,12 @@ public final class OsmFormat {
       return visible_;
     }
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     public int getVisibleCount() {
       return visible_.size();
     }
     /**
-     * <pre>
-     * The visible flag is used to store history information. It indicates that
-     * the current object version has been created by a delete operation on the
-     * OSM API.
-     * When a writer sets this flag, it MUST add a required_features tag with
-     * value "HistoricalInformation" to the HeaderBlock.
-     * If this flag is not available for some object it MUST be assumed to be
-     * true if the file has the required_features tag "HistoricalInformation"
-     * set.
-     * </pre>
-     *
      * <code>repeated bool visible = 6 [packed = true];</code>
      */
     public boolean getVisible(int index) {
@@ -8627,10 +8389,6 @@ public final class OsmFormat {
       return builder;
     }
     /**
-     * <pre>
-     ** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. 
-     * </pre>
-     *
      * Protobuf type {@code io.greennav.persistence.osmpbf.DenseInfo}
      */
     public static final class Builder extends
@@ -9310,17 +9068,6 @@ public final class OsmFormat {
          }
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public java.util.List<java.lang.Boolean>
@@ -9328,51 +9075,18 @@ public final class OsmFormat {
         return java.util.Collections.unmodifiableList(visible_);
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public int getVisibleCount() {
         return visible_.size();
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public boolean getVisible(int index) {
         return visible_.get(index);
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public Builder setVisible(
@@ -9383,17 +9097,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public Builder addVisible(boolean value) {
@@ -9403,17 +9106,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public Builder addAllVisible(
@@ -9425,17 +9117,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       * The visible flag is used to store history information. It indicates that
-       * the current object version has been created by a delete operation on the
-       * OSM API.
-       * When a writer sets this flag, it MUST add a required_features tag with
-       * value "HistoricalInformation" to the HeaderBlock.
-       * If this flag is not available for some object it MUST be assumed to be
-       * true if the file has the required_features tag "HistoricalInformation"
-       * set.
-       * </pre>
-       *
        * <code>repeated bool visible = 6 [packed = true];</code>
        */
       public Builder clearVisible() {
@@ -9498,34 +9179,15 @@ public final class OsmFormat {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     *   // Parallel arrays.
-     *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-     *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-     *   optional Info info = 4;
-     * </pre>
-     *
      * <code>required int64 id = 1;</code>
      */
     boolean hasId();
     /**
-     * <pre>
-     *   // Parallel arrays.
-     *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-     *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-     *   optional Info info = 4;
-     * </pre>
-     *
      * <code>required int64 id = 1;</code>
      */
     long getId();
   }
   /**
-   * <pre>
-   * THIS IS STUB DESIGN FOR CHANGESETS. NOT USED RIGHT NOW.
-   * TODO:    REMOVE THIS?
-   * </pre>
-   *
    * Protobuf type {@code io.greennav.persistence.osmpbf.ChangeSet}
    */
   public  static final class ChangeSet extends
@@ -9601,26 +9263,12 @@ public final class OsmFormat {
     public static final int ID_FIELD_NUMBER = 1;
     private long id_;
     /**
-     * <pre>
-     *   // Parallel arrays.
-     *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-     *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-     *   optional Info info = 4;
-     * </pre>
-     *
      * <code>required int64 id = 1;</code>
      */
     public boolean hasId() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <pre>
-     *   // Parallel arrays.
-     *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-     *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-     *   optional Info info = 4;
-     * </pre>
-     *
      * <code>required int64 id = 1;</code>
      */
     public long getId() {
@@ -9779,11 +9427,6 @@ public final class OsmFormat {
       return builder;
     }
     /**
-     * <pre>
-     * THIS IS STUB DESIGN FOR CHANGESETS. NOT USED RIGHT NOW.
-     * TODO:    REMOVE THIS?
-     * </pre>
-     *
      * Protobuf type {@code io.greennav.persistence.osmpbf.ChangeSet}
      */
     public static final class Builder extends
@@ -9927,39 +9570,18 @@ public final class OsmFormat {
 
       private long id_ ;
       /**
-       * <pre>
-       *   // Parallel arrays.
-       *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-       *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-       *   optional Info info = 4;
-       * </pre>
-       *
        * <code>required int64 id = 1;</code>
        */
       public boolean hasId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <pre>
-       *   // Parallel arrays.
-       *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-       *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-       *   optional Info info = 4;
-       * </pre>
-       *
        * <code>required int64 id = 1;</code>
        */
       public long getId() {
         return id_;
       }
       /**
-       * <pre>
-       *   // Parallel arrays.
-       *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-       *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-       *   optional Info info = 4;
-       * </pre>
-       *
        * <code>required int64 id = 1;</code>
        */
       public Builder setId(long value) {
@@ -9969,13 +9591,6 @@ public final class OsmFormat {
         return this;
       }
       /**
-       * <pre>
-       *   // Parallel arrays.
-       *   repeated uint32 keys = 2 [packed = true]; // String IDs.
-       *   repeated uint32 vals = 3 [packed = true]; // String IDs.
-       *   optional Info info = 4;
-       * </pre>
-       *
        * <code>required int64 id = 1;</code>
        */
       public Builder clearId() {

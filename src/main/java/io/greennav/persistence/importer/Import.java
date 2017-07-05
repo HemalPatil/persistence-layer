@@ -1,17 +1,24 @@
-package io.greennav.persistence;
+package io.greennav.persistence.importer;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
+import de.topobyte.osm4j.core.model.impl.Node;
 import io.greennav.persistence.pbfparser.FileFormat.Blob;
 import io.greennav.persistence.pbfparser.FileFormat.BlobHeader;
 import io.greennav.persistence.pbfparser.OsmFormat.*;
+import org.apache.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.math.RoundingMode;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -30,15 +37,23 @@ public class Import
 	public static final int BlobLzmaData = Blob.LZMA_DATA_FIELD_NUMBER << 3 | 2;
 	public static final int BlobObsoleteData = Blob.OBSOLETE_BZIP2_DATA_FIELD_NUMBER << 3 | 2;
 
+	private static Logger logger = Logger.getLogger(Import.class.getName());
+
 	public static void importFile(String filePath) throws FileNotFoundException
 	{
 		FileInputStream pbfFile = new FileInputStream(filePath);
 		CodedInputStream input = CodedInputStream.newInstance(pbfFile);
 		//List<byte[]> compressedDataList = new ArrayList<>();
+		Map<Long, Node> nodes = new HashMap<>();
 		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGrous = 0, changesetGroups = 0, denseGroups = 0;
 		try
 		{
+			String url = "jdbc:postgresql://localhost:5432/pbftest";
+			Connection connection = DriverManager.getConnection(url, "hemal", "roflolmao");
+			Statement s = connection.createStatement();
+
 			while(!input.isAtEnd())
+			//for(int i = 0; i < 2; ++i)
 			{
 				input.skipRawBytes(4);
 				input.readTag();
@@ -72,7 +87,7 @@ public class Import
 						compressed = true;
 						break;
 				}
-				byte[] rawBytes = {};
+				byte[] rawBytes;
 				if(!compressed)
 				{
 					rawBytes = input.readByteArray();
@@ -84,9 +99,7 @@ public class Import
 					switch (compressionType)
 					{
 						case BlobZlibData:
-							System.out.println(dataCount);
 							compressedBytes = input.readByteArray();
-							System.out.println("done till here");
 							//compressedDataList.add(blob);
 							break;
 						default:
@@ -108,6 +121,10 @@ public class Import
 					}
 					PrimitiveBlock pb = PrimitiveBlock.parseFrom(rawBytes);
 					StringTable stringTable = pb.getStringtable();
+					int granularity = pb.getGranularity();
+					long latitudeOffset = pb.getLatOffset();
+					long longitudeOffset = pb.getLonOffset();
+
 					for(PrimitiveGroup g : pb.getPrimitivegroupList())
 					{
 						if(g.getNodesCount() > 0)
@@ -132,8 +149,72 @@ public class Import
 						}
 						else
 						{
-//							System.out.println("Dense nodes group");
+							System.out.println("Processing dense nodes group: " + (denseGroups + 1));
 							DenseNodes d = g.getDense();
+							List<Long> ids = d.getIdList();
+							List<Long> latitudes = d.getLatList();
+							List<Long> longitudes = d.getLonList();
+							List<Integer> keyVals = d.getKeysValsList();
+							int keyValIndex = 0;
+							int nodeIndex = 0;
+							long previousId = 0;
+							long previousLat = 0;
+							long previousLon = 0;
+							for(long deltaId : ids)
+							{
+								long currentId = previousId + deltaId;
+								long currentLat = previousLat + latitudes.get(nodeIndex);
+								long currentLon = previousLon + longitudes.get(nodeIndex);
+								Map<String, String> tags = new HashMap<>(10);
+								if(keyVals.size() != 0)
+								{
+									String key, value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
+									++keyValIndex;
+									while(!value.equals(""))
+									{
+										key = value;
+										key = key.replace("\"", "");
+										key = key.replace("\'", "");
+										value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
+										++keyValIndex;
+										value = value.replace("\"", "");
+										value = value.replace("\'", "");
+										tags.put(key, value);
+										value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
+										++keyValIndex;
+									}
+								}
+								previousId = currentId;
+								previousLat = currentLat;
+								previousLon = currentLon;
+								double actualLat = (latitudeOffset + (granularity * currentLat)) * 0.000000001;
+								double actualLon = (longitudeOffset + (granularity * currentLon)) * 0.000000001;
+								DecimalFormat df = new DecimalFormat("##.#######");
+								df.setRoundingMode(RoundingMode.DOWN);
+								String lat = df.format(actualLat);
+								String lon = df.format(actualLon);
+								StringBuilder insertQuery = new StringBuilder("INSERT INTO planet_osm_nodes(id, lat, lon, tags, way) VALUES " +
+										"(" + currentId + ", " + lat + ", " + lon + ", '");
+								int index = 0, size = tags.size();
+								for(Map.Entry<String, String> tag : tags.entrySet())
+								{
+									insertQuery.append("\"" + tag.getKey() + "\"=>\"" + tag.getValue() + "\"");
+									if(index < size - 1)
+									{
+										insertQuery.append(", ");
+									}
+									++index;
+								}
+								insertQuery.append("', st_setsrid(st_makepoint(" + lat + ", " + lon + "), 4326))");
+								s.addBatch(insertQuery.toString());
+								++nodeIndex;
+								if(nodeIndex % 2000 == 0)
+								{
+									s.executeBatch();
+								}
+							}
+							s.executeBatch();
+							System.out.println("Processed " + nodeIndex + " nodes in the dense group");
 							++denseGroups;
 						}
 					}
@@ -148,7 +229,7 @@ public class Import
 			System.out.println("Dense node groups: " + denseGroups);
 			System.out.println("Changeset groups: " + changesetGroups);
 
-//			SparkConf conf = new SparkConf().setAppName("io.greennav.persistence.Import")
+//			SparkConf conf = new SparkConf().setAppName("io.greennav.persistence.importer.Import")
 //					.setMaster("spark://localhost:7077");
 //			SparkContext sc = new SparkContext(conf);
 //			sc.hadoopConfiguration().set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
@@ -167,13 +248,18 @@ public class Import
 			System.out.println("CodedInputStream isAtEnd failed");
 			e.printStackTrace();
 		}
+		catch (SQLException e)
+		{
+			System.out.println("Connnection create failed");
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String[] args)
 	{
 		try
 		{
-			Import.importFile("D:\\Hemal\\GSoC17\\monaco-latest.osm.pbf");
+			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf");
 		}
 		catch (FileNotFoundException e)
 		{
