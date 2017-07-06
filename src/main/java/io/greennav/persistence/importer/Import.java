@@ -38,13 +38,19 @@ public class Import
 	public static final int BlobObsoleteData = Blob.OBSOLETE_BZIP2_DATA_FIELD_NUMBER << 3 | 2;
 
 	private static Logger logger = Logger.getLogger(Import.class.getName());
+	public static boolean stopDenseNodeProcessors = false;
 
-	public static void importFile(String filePath) throws FileNotFoundException
+	public static void importFile(String filePath, int numberOfThreads) throws FileNotFoundException
 	{
 		FileInputStream pbfFile = new FileInputStream(filePath);
 		CodedInputStream input = CodedInputStream.newInstance(pbfFile);
-		//List<byte[]> compressedDataList = new ArrayList<>();
-		Map<Long, Node> nodes = new HashMap<>();
+//		DenseNodeStore store = new DenseNodeStore();
+//		DenseNodesProcessor[] denseNodesProcessors = new DenseNodesProcessor[numberOfThreads];
+//		for(int i = 0; i < numberOfThreads; ++i)
+//		{
+//			denseNodesProcessors[i] = new DenseNodesProcessor(store, i+1);
+//			denseNodesProcessors[i].start();
+//		}
 		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGrous = 0, changesetGroups = 0, denseGroups = 0;
 		try
 		{
@@ -53,7 +59,7 @@ public class Import
 			Statement s = connection.createStatement();
 
 			while(!input.isAtEnd())
-			//for(int i = 0; i < 2; ++i)
+			//for(int i = 0; i < 40; ++i)
 			{
 				input.skipRawBytes(4);
 				input.readTag();
@@ -149,8 +155,10 @@ public class Import
 						}
 						else
 						{
-							System.out.println("Processing dense nodes group: " + (denseGroups + 1));
+							++denseGroups;
+							System.out.println("Processing dense nodes group: " + denseGroups);
 							DenseNodes d = g.getDense();
+//							store.put(d);
 							List<Long> ids = d.getIdList();
 							List<Long> latitudes = d.getLatList();
 							List<Long> longitudes = d.getLonList();
@@ -208,14 +216,13 @@ public class Import
 								insertQuery.append("', st_setsrid(st_makepoint(" + lat + ", " + lon + "), 4326))");
 								s.addBatch(insertQuery.toString());
 								++nodeIndex;
-								if(nodeIndex % 2000 == 0)
+								if(nodeIndex % 4000 == 0)
 								{
 									s.executeBatch();
 								}
 							}
 							s.executeBatch();
 							System.out.println("Processed " + nodeIndex + " nodes in the dense group");
-							++denseGroups;
 						}
 					}
 				}
@@ -228,20 +235,6 @@ public class Import
 			System.out.println("Relation groups: " + relationGrous);
 			System.out.println("Dense node groups: " + denseGroups);
 			System.out.println("Changeset groups: " + changesetGroups);
-
-//			SparkConf conf = new SparkConf().setAppName("io.greennav.persistence.importer.Import")
-//					.setMaster("spark://localhost:7077");
-//			SparkContext sc = new SparkContext(conf);
-//			sc.hadoopConfiguration().set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-//			sc.hadoopConfiguration().set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-//			JavaSparkContext jsc = new JavaSparkContext(sc);
-//			jsc.parallelize(compressedDataList).foreach(new VoidFunction<byte[]>()
-//			{
-//				@Override
-//				public void call(byte[] bytes) throws Exception
-//				{
-//				}
-//			});
 		}
 		catch (IOException e)
 		{
@@ -253,13 +246,14 @@ public class Import
 			System.out.println("Connnection create failed");
 			e.printStackTrace();
 		}
+//		stopDenseNodeProcessors = true;
 	}
 
 	public static void main(String[] args)
 	{
 		try
 		{
-			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf");
+			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 4);
 		}
 		catch (FileNotFoundException e)
 		{
