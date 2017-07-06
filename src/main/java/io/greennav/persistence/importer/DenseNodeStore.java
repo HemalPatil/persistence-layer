@@ -11,34 +11,53 @@ import java.util.Stack;
  */
 public class DenseNodeStore
 {
-	private static Stack<DenseNodes> denseNodesStack = new Stack<>();
-	private static Stack<StringTable> stringTablesStack = new Stack<>();
+	private Stack<DenseNodes> denseNodesStack = new Stack<>();
+	private Stack<StringTable> stringTablesStack = new Stack<>();
+	private Stack<Integer> granularityStack = new Stack<>();
+	private Stack<Long> latitudeOffsetStack = new Stack<>();
+	private Stack<Long> longitudeOffsetStack = new Stack<>();
+	private boolean stopDenseNodeProcessors = false;
 
-	public synchronized Pair<DenseNodes, StringTable> get()
+	public synchronized void end()
 	{
+		System.out.println("ending");
+		stopDenseNodeProcessors = true;
+		notifyAll();
+	}
+
+	public synchronized Object[] get(int number)
+	{
+//		System.out.println("entered " + number);
 		while(denseNodesStack.empty())
 		{
 			try
 			{
-				if(Import.stopDenseNodeProcessors)
+				if(stopDenseNodeProcessors)
 				{
 					notifyAll();
+//					System.out.println("null " + number);
 					return null;
 				}
+//				System.out.println("wait " + number);
 				wait();
 			}
 			catch (InterruptedException e)
 			{
+//				System.out.println("get inter");
 				e.printStackTrace();
 			}
 		}
-		return new Pair<>(denseNodesStack.pop(), stringTablesStack.pop());
+//		System.out.println("return " + number);
+		return new Object[]{denseNodesStack.pop(), stringTablesStack.pop(), granularityStack.pop(), latitudeOffsetStack.pop(), longitudeOffsetStack.pop()};
 	}
 
-	public synchronized void put(DenseNodes d, StringTable s)
+	public synchronized void put(DenseNodes d, StringTable s, Integer granularity, Long latitudeOffset, Long longitudeOffset)
 	{
 		denseNodesStack.push(d);
 		stringTablesStack.push(s);
+		granularityStack.push(granularity);
+		latitudeOffsetStack.push(latitudeOffset);
+		longitudeOffsetStack.push(longitudeOffset);
 		notifyAll();
 	}
 }

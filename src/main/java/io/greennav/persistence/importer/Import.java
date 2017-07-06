@@ -1,7 +1,6 @@
 package io.greennav.persistence.importer;
 
 import com.google.protobuf.CodedInputStream;
-import de.topobyte.osm4j.core.model.impl.Node;
 import io.greennav.persistence.pbfparser.FileFormat.Blob;
 import io.greennav.persistence.pbfparser.FileFormat.BlobHeader;
 import io.greennav.persistence.pbfparser.OsmFormat.*;
@@ -10,15 +9,9 @@ import org.apache.log4j.Logger;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -38,28 +31,25 @@ public class Import
 	public static final int BlobObsoleteData = Blob.OBSOLETE_BZIP2_DATA_FIELD_NUMBER << 3 | 2;
 
 	private static Logger logger = Logger.getLogger(Import.class.getName());
-	public static boolean stopDenseNodeProcessors = false;
 
 	public static void importFile(String filePath, int numberOfThreads) throws FileNotFoundException
 	{
 		FileInputStream pbfFile = new FileInputStream(filePath);
 		CodedInputStream input = CodedInputStream.newInstance(pbfFile);
-//		DenseNodeStore store = new DenseNodeStore();
-//		DenseNodesProcessor[] denseNodesProcessors = new DenseNodesProcessor[numberOfThreads];
-//		for(int i = 0; i < numberOfThreads; ++i)
-//		{
-//			denseNodesProcessors[i] = new DenseNodesProcessor(store, i+1);
-//			denseNodesProcessors[i].start();
-//		}
+		DenseNodeStore store = new DenseNodeStore();
+		DenseNodesProcessor[] denseNodesProcessors = new DenseNodesProcessor[numberOfThreads];
 		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGrous = 0, changesetGroups = 0, denseGroups = 0;
 		try
 		{
 			String url = "jdbc:postgresql://localhost:5432/pbftest";
-			Connection connection = DriverManager.getConnection(url, "hemal", "roflolmao");
-			Statement s = connection.createStatement();
+			for(int i = 0; i < numberOfThreads; ++i)
+			{
+				denseNodesProcessors[i] = new DenseNodesProcessor(i+1, store, url, "hemal", "roflolmao");
+				denseNodesProcessors[i].start();
+			}
 
-			while(!input.isAtEnd())
-			//for(int i = 0; i < 40; ++i)
+//			while(!input.isAtEnd())
+			for(int i = 0; i < 100; ++i)
 			{
 				input.skipRawBytes(4);
 				input.readTag();
@@ -127,9 +117,9 @@ public class Import
 					}
 					PrimitiveBlock pb = PrimitiveBlock.parseFrom(rawBytes);
 					StringTable stringTable = pb.getStringtable();
-					int granularity = pb.getGranularity();
-					long latitudeOffset = pb.getLatOffset();
-					long longitudeOffset = pb.getLonOffset();
+					Integer granularity = pb.getGranularity();
+					Long latitudeOffset = pb.getLatOffset();
+					Long longitudeOffset = pb.getLonOffset();
 
 					for(PrimitiveGroup g : pb.getPrimitivegroupList())
 					{
@@ -158,71 +148,8 @@ public class Import
 							++denseGroups;
 							System.out.println("Processing dense nodes group: " + denseGroups);
 							DenseNodes d = g.getDense();
-//							store.put(d);
-							List<Long> ids = d.getIdList();
-							List<Long> latitudes = d.getLatList();
-							List<Long> longitudes = d.getLonList();
-							List<Integer> keyVals = d.getKeysValsList();
-							int keyValIndex = 0;
-							int nodeIndex = 0;
-							long previousId = 0;
-							long previousLat = 0;
-							long previousLon = 0;
-							for(long deltaId : ids)
-							{
-								long currentId = previousId + deltaId;
-								long currentLat = previousLat + latitudes.get(nodeIndex);
-								long currentLon = previousLon + longitudes.get(nodeIndex);
-								Map<String, String> tags = new HashMap<>(10);
-								if(keyVals.size() != 0)
-								{
-									String key, value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
-									++keyValIndex;
-									while(!value.equals(""))
-									{
-										key = value;
-										key = key.replace("\"", "");
-										key = key.replace("\'", "");
-										value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
-										++keyValIndex;
-										value = value.replace("\"", "");
-										value = value.replace("\'", "");
-										tags.put(key, value);
-										value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
-										++keyValIndex;
-									}
-								}
-								previousId = currentId;
-								previousLat = currentLat;
-								previousLon = currentLon;
-								double actualLat = (latitudeOffset + (granularity * currentLat)) * 0.000000001;
-								double actualLon = (longitudeOffset + (granularity * currentLon)) * 0.000000001;
-								DecimalFormat df = new DecimalFormat("##.#######");
-								df.setRoundingMode(RoundingMode.DOWN);
-								String lat = df.format(actualLat);
-								String lon = df.format(actualLon);
-								StringBuilder insertQuery = new StringBuilder("INSERT INTO planet_osm_nodes(id, lat, lon, tags, way) VALUES " +
-										"(" + currentId + ", " + lat + ", " + lon + ", '");
-								int index = 0, size = tags.size();
-								for(Map.Entry<String, String> tag : tags.entrySet())
-								{
-									insertQuery.append("\"" + tag.getKey() + "\"=>\"" + tag.getValue() + "\"");
-									if(index < size - 1)
-									{
-										insertQuery.append(", ");
-									}
-									++index;
-								}
-								insertQuery.append("', st_setsrid(st_makepoint(" + lat + ", " + lon + "), 4326))");
-								s.addBatch(insertQuery.toString());
-								++nodeIndex;
-								if(nodeIndex % 4000 == 0)
-								{
-									s.executeBatch();
-								}
-							}
-							s.executeBatch();
-							System.out.println("Processed " + nodeIndex + " nodes in the dense group");
+							store.put(d, stringTable, granularity, latitudeOffset, longitudeOffset);
+
 						}
 					}
 				}
@@ -241,19 +168,27 @@ public class Import
 			System.out.println("CodedInputStream isAtEnd failed");
 			e.printStackTrace();
 		}
-		catch (SQLException e)
+		store.end();
+		System.out.println("stopped dense");
+		for(int i = 0; i < numberOfThreads; ++i)
 		{
-			System.out.println("Connnection create failed");
-			e.printStackTrace();
+			try
+			{
+				denseNodesProcessors[i].join();
+			}
+			catch (InterruptedException e)
+			{
+				System.out.println("Thread " + (i + 1) + " was interrupted");
+			}
 		}
-//		stopDenseNodeProcessors = true;
+		System.out.println("Dense nodes processing over");
 	}
 
 	public static void main(String[] args)
 	{
 		try
 		{
-			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 4);
+			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 8);
 		}
 		catch (FileNotFoundException e)
 		{
