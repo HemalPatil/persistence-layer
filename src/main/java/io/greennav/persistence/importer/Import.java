@@ -36,9 +36,9 @@ public class Import
 	{
 		FileInputStream pbfFile = new FileInputStream(filePath);
 		CodedInputStream input = CodedInputStream.newInstance(pbfFile);
-		DenseNodeStore store = new DenseNodeStore();
+		DenseNodeStore store = new DenseNodeStore(50);
 		DenseNodesProcessor[] denseNodesProcessors = new DenseNodesProcessor[numberOfThreads];
-		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGrous = 0, changesetGroups = 0, denseGroups = 0;
+		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGroups = 0, changesetGroups = 0, denseGroups = 0;
 		try
 		{
 			String url = "jdbc:postgresql://localhost:5432/pbftest";
@@ -48,8 +48,8 @@ public class Import
 				denseNodesProcessors[i].start();
 			}
 
-//			while(!input.isAtEnd())
-			for(int i = 0; i < 100; ++i)
+			while(!input.isAtEnd())
+//			for(int i = 0; i < 100; ++i)
 			{
 				input.skipRawBytes(4);
 				input.readTag();
@@ -96,7 +96,6 @@ public class Import
 					{
 						case BlobZlibData:
 							compressedBytes = input.readByteArray();
-							//compressedDataList.add(blob);
 							break;
 						default:
 							System.out.println("Unsupported compression, skipping over");
@@ -115,42 +114,40 @@ public class Import
 						System.out.println("Decompression of OSM data failed. Skipping over this block");
 						continue;
 					}
-					PrimitiveBlock pb = PrimitiveBlock.parseFrom(rawBytes);
-					StringTable stringTable = pb.getStringtable();
-					Integer granularity = pb.getGranularity();
-					Long latitudeOffset = pb.getLatOffset();
-					Long longitudeOffset = pb.getLonOffset();
-
-					for(PrimitiveGroup g : pb.getPrimitivegroupList())
+				}
+				PrimitiveBlock pb = PrimitiveBlock.parseFrom(rawBytes);
+				StringTable stringTable = pb.getStringtable();
+				Integer granularity = pb.getGranularity();
+				Long latitudeOffset = pb.getLatOffset();
+				Long longitudeOffset = pb.getLonOffset();
+				for(PrimitiveGroup g : pb.getPrimitivegroupList())
+				{
+					if(g.getNodesCount() > 0)
 					{
-						if(g.getNodesCount() > 0)
-						{
-//							System.out.println("Node group");
-							++nodeGroups;
-						}
-						else if(g.getWaysCount() > 0)
-						{
-//							System.out.println("Way group");
-							++wayGroups;
-						}
-						else if(g.getRelationsCount() > 0)
-						{
-//							System.out.println("Relation group");
-							++relationGrous;
-						}
-						else if(g.getChangesetsCount() > 0)
-						{
-//							System.out.println("Changeset group");
-							++changesetGroups;
-						}
-						else
-						{
-							++denseGroups;
-							System.out.println("Processing dense nodes group: " + denseGroups);
-							DenseNodes d = g.getDense();
-							store.put(d, stringTable, granularity, latitudeOffset, longitudeOffset);
-
-						}
+//						System.out.println("Node group");
+						++nodeGroups;
+					}
+					else if(g.getWaysCount() > 0)
+					{
+//						System.out.println("Way group");
+						++wayGroups;
+					}
+					else if(g.getRelationsCount() > 0)
+					{
+//						System.out.println("Relation group");
+						++relationGroups;
+					}
+					else if(g.getChangesetsCount() > 0)
+					{
+//						System.out.println("Changeset group");
+						++changesetGroups;
+					}
+					else
+					{
+						++denseGroups;
+						System.out.println("Processing dense nodes group: " + denseGroups);
+						DenseNodes d = g.getDense();
+						//store.put(d, stringTable, granularity, latitudeOffset, longitudeOffset);
 					}
 				}
 				input.resetSizeCounter();
@@ -159,7 +156,7 @@ public class Import
 			System.out.println("Data blocks: " + dataCount);
 			System.out.println("Node groups: " + nodeGroups);
 			System.out.println("Way groups: " + wayGroups);
-			System.out.println("Relation groups: " + relationGrous);
+			System.out.println("Relation groups: " + relationGroups);
 			System.out.println("Dense node groups: " + denseGroups);
 			System.out.println("Changeset groups: " + changesetGroups);
 		}
@@ -188,7 +185,7 @@ public class Import
 	{
 		try
 		{
-			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 8);
+			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 4);
 		}
 		catch (FileNotFoundException e)
 		{

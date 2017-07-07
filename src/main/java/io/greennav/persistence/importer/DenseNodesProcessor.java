@@ -47,6 +47,7 @@ public class DenseNodesProcessor extends Thread
 		}
 	}
 
+	// TODO replace souts by logs
 	@Override
 	public void run()
 	{

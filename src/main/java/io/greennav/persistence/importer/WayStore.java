@@ -1,25 +1,25 @@
 package io.greennav.persistence.importer;
 
-import io.greennav.persistence.pbfparser.OsmFormat.DenseNodes;
+import io.greennav.persistence.pbfparser.OsmFormat.Way;
 import io.greennav.persistence.pbfparser.OsmFormat.StringTable;
 
 import java.util.Stack;
 
 /**
- * Created by Hemal on 06-Jul-17.
+ * Created by Hemal on 07-Jul-17.
  */
-public class DenseNodeStore
+public class WayStore
 {
-	private Stack<DenseNodes> denseNodesStack = new Stack<>();
+	private Stack<Way> wayStack = new Stack<>();
 	private Stack<StringTable> stringTablesStack = new Stack<>();
 	private Stack<Integer> granularityStack = new Stack<>();
 	private Stack<Long> latitudeOffsetStack = new Stack<>();
 	private Stack<Long> longitudeOffsetStack = new Stack<>();
-	private boolean stopDenseNodeProcessors = false;
+	private boolean stopWayProcessors = false;
 	private int capacity = 50;
 	private int count = 0;
 
-	DenseNodeStore(int capacity)
+	WayStore(int capacity)
 	{
 		this.capacity = capacity;
 	}
@@ -27,7 +27,7 @@ public class DenseNodeStore
 	public synchronized void end()
 	{
 		System.out.println("ending");
-		stopDenseNodeProcessors = true;
+		stopWayProcessors = true;
 		notifyAll();
 	}
 
@@ -35,11 +35,11 @@ public class DenseNodeStore
 	public synchronized Object[] get(int number)
 	{
 //		System.out.println("entered " + number);
-		while(denseNodesStack.empty())
+		while(wayStack.empty())
 		{
 			try
 			{
-				if(stopDenseNodeProcessors)
+				if(stopWayProcessors)
 				{
 					notifyAll();
 //					System.out.println("null " + number);
@@ -57,10 +57,10 @@ public class DenseNodeStore
 //		System.out.println("return " + number);
 		--count;
 		notifyAll();
-		return new Object[]{denseNodesStack.pop(), stringTablesStack.pop(), granularityStack.pop(), latitudeOffsetStack.pop(), longitudeOffsetStack.pop()};
+		return new Object[]{wayStack.pop(), stringTablesStack.pop(), granularityStack.pop(), latitudeOffsetStack.pop(), longitudeOffsetStack.pop()};
 	}
 
-	public synchronized void put(DenseNodes d, StringTable s, Integer granularity, Long latitudeOffset, Long longitudeOffset)
+	public synchronized void put(Way w, StringTable s, Integer granularity, Long latitudeOffset, Long longitudeOffset)
 	{
 		while(count >= capacity)
 		{
@@ -75,7 +75,7 @@ public class DenseNodeStore
 			}
 		}
 		++count;
-		denseNodesStack.push(d);
+		wayStack.push(w);
 		stringTablesStack.push(s);
 		granularityStack.push(granularity);
 		latitudeOffsetStack.push(latitudeOffset);
