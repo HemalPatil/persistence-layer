@@ -19,11 +19,6 @@ import java.util.Map;
 public class DenseNodesProcessor extends Thread
 {
 	private DenseNodeStore store;
-	private DenseNodes d;
-	private StringTable stringTable;
-	private Integer granularity;
-	private Long latitudeOffset;
-	private Long longitudeOffset;
 	private Statement s;
 
 	private int threadNumber;
@@ -52,6 +47,11 @@ public class DenseNodesProcessor extends Thread
 	public void run()
 	{
 		System.out.println("Thread " + threadNumber + " started");
+		DenseNodes d;
+		StringTable stringTable;
+		Integer granularity;
+		Long latitudeOffset;
+		Long longitudeOffset;
 		while(true)
 		{
 			try

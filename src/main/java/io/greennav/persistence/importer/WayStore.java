@@ -1,7 +1,7 @@
 package io.greennav.persistence.importer;
 
-import io.greennav.persistence.pbfparser.OsmFormat.Way;
 import io.greennav.persistence.pbfparser.OsmFormat.StringTable;
+import io.greennav.persistence.pbfparser.OsmFormat.Way;
 
 import java.util.Stack;
 
