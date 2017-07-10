@@ -2,13 +2,11 @@ package io.greennav.persistence.importer;
 
 import io.greennav.persistence.pbfparser.OsmFormat.DenseNodes;
 import io.greennav.persistence.pbfparser.OsmFormat.StringTable;
+import org.postgis.PGgeometry;
+import org.postgis.Point;
 
-import java.math.RoundingMode;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DecimalFormat;
+import java.io.IOException;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +17,8 @@ import java.util.Map;
 public class DenseNodesProcessor extends Thread
 {
 	private DenseNodeStore store;
-	private Statement s;
+	private PreparedStatement nodeBatch;
+	private HashMap<Long, Point> nodeStore;
 
 	private int threadNumber;
 	private int groupNumber = 0;
@@ -29,24 +28,29 @@ public class DenseNodesProcessor extends Thread
 		super();
 		this.store = store;
 		this.threadNumber = number;
-		this.s = s;
+		nodeStore = new HashMap<>();
 		try
 		{
 			Connection connection = DriverManager.getConnection(url, user, password);
-			s = connection.createStatement();
+			nodeBatch = connection.prepareStatement("INSERT INTO planet_osm_nodes (id, lat, lon, tags, way) VALUES (?, ?, ?, ?, ?)");
 		}
 		catch (SQLException e)
 		{
-			System.out.println("Connection to database for thread " + threadNumber + " failed");
+			System.out.println("Connection to database for dense nodes processor " + threadNumber + " failed");
 			e.printStackTrace();
 		}
+	}
+
+	public HashMap<Long, Point> getNodeStore()
+	{
+		return nodeStore;
 	}
 
 	// TODO replace souts by logs
 	@Override
 	public void run()
 	{
-		System.out.println("Thread " + threadNumber + " started");
+		System.out.println("Dense nodes processor " + threadNumber + " started");
 		DenseNodes d;
 		StringTable stringTable;
 		Integer granularity;
@@ -67,7 +71,7 @@ public class DenseNodesProcessor extends Thread
 				granularity = (Integer) r[2];
 				latitudeOffset = (Long) r[3];
 				longitudeOffset = (Long) r[4];
-				System.out.println("Thread " + threadNumber + " got group " + groupNumber);
+				System.out.println("Dense node processor " + threadNumber + " got group " + groupNumber);
 				List<Long> ids = d.getIdList();
 				List<Long> latitudes = d.getLatList();
 				List<Long> longitudes = d.getLonList();
@@ -90,56 +94,52 @@ public class DenseNodesProcessor extends Thread
 						while (!value.equals(""))
 						{
 							key = value;
-							key = key.replace("\"", "");
-							key = key.replace("\'", "");
 							value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
 							++keyValIndex;
-							value = value.replace("\"", "");
-							value = value.replace("\'", "");
 							tags.put(key, value);
 							value = new String(stringTable.getS(keyVals.get(keyValIndex)).toByteArray());
 							++keyValIndex;
 						}
 					}
+					//System.out.println(currentId);
+					//System.in.read();
 					previousId = currentId;
 					previousLat = currentLat;
 					previousLon = currentLon;
 					double actualLat = (latitudeOffset + (granularity * currentLat)) * 0.000000001;
 					double actualLon = (longitudeOffset + (granularity * currentLon)) * 0.000000001;
-					DecimalFormat df = new DecimalFormat("##.#######");
-					df.setRoundingMode(RoundingMode.DOWN);
-					String lat = df.format(actualLat);
-					String lon = df.format(actualLon);
-					StringBuilder insertQuery = new StringBuilder("INSERT INTO planet_osm_nodes(id, lat, lon, tags, way) VALUES " +
-							"(" + currentId + ", " + lat + ", " + lon + ", '");
-					int index = 0, size = tags.size();
-					for (Map.Entry<String, String> tag : tags.entrySet())
-					{
-						insertQuery.append("\"" + tag.getKey() + "\"=>\"" + tag.getValue() + "\"");
-						if (index < size - 1)
-						{
-							insertQuery.append(", ");
-						}
-						++index;
-					}
-					insertQuery.append("', st_setsrid(st_makepoint(" + lat + ", " + lon + "), 4326))");
-					s.addBatch(insertQuery.toString());
+					nodeBatch.setLong(1, currentId);
+					nodeBatch.setDouble(2, actualLat);
+					nodeBatch.setDouble(3, actualLon);
+					nodeBatch.setObject(4, tags);
+					Point pg = new Point(actualLon, actualLat);
+					pg.setSrid(4326);
+					//nodeStore.put(currentId, pg);
+					nodeBatch.setObject(5, new PGgeometry(pg));
+					nodeBatch.addBatch();
 					++nodeIndex;
 					if (nodeIndex % 4000 == 0)
 					{
-						s.executeBatch();
+						nodeBatch.executeBatch();
+						nodeBatch.clearBatch();
 					}
 				}
-				s.executeBatch();
-				System.out.println("Processed " + nodeIndex + " nodes in the dense group");
+				nodeBatch.executeBatch();
+				nodeBatch.clearBatch();
+				System.out.println("Dense nodes processor " + threadNumber + " processed " + nodeIndex + " nodes in the dense group");
 			}
 			catch (SQLException e)
 			{
-				System.out.println("SQL batch failed");
+				System.out.println("SQL batch failed for dense nodes processor " + threadNumber);
 				e.printStackTrace();
 			}
+//			catch (IOException e)
+//			{
+//				e.printStackTrace();
+//			}
 		}
 		store.end();
-		System.out.println("Thread " + threadNumber + " exiting " + groupNumber);
+		System.out.println("NODE PROC CACHE " + nodeStore.size());
+		System.out.println("Dense nodes processor " + threadNumber + " exiting after processing " + groupNumber + " of dense nodes groups");
 	}
 }

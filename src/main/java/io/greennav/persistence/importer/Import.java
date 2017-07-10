@@ -5,6 +5,7 @@ import io.greennav.persistence.pbfparser.FileFormat.Blob;
 import io.greennav.persistence.pbfparser.FileFormat.BlobHeader;
 import io.greennav.persistence.pbfparser.OsmFormat.*;
 import org.apache.log4j.Logger;
+import org.postgis.Point;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,6 +13,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -20,6 +24,8 @@ import java.util.zip.Inflater;
  */
 public class Import
 {
+	//create table planet_osm_nodes (id bigint primary key not null, lat double precision not null, lon double precision not null, tags hstore default '' not null, way geometry(Point, 4326), ways bigint[] default '{}' not null);
+	//create table planet_osm_ways (id bigint primary key not null, nodes bigint[] default '{}' not null, tags hstore default '' not null, way geometry(LineString, 4326), distances bigint[] default '{}' not null);
 	public static final int BlobHeaderType = BlobHeader.TYPE_FIELD_NUMBER << 3 | 2;
 	public static final int BlobHeaderIndexData = BlobHeader.INDEXDATA_FIELD_NUMBER << 3 | 2;
 	public static final int BLobHeaderDatasize = BlobHeader.DATASIZE_FIELD_NUMBER << 3;
@@ -30,22 +36,30 @@ public class Import
 	public static final int BlobLzmaData = Blob.LZMA_DATA_FIELD_NUMBER << 3 | 2;
 	public static final int BlobObsoleteData = Blob.OBSOLETE_BZIP2_DATA_FIELD_NUMBER << 3 | 2;
 
+	public static List<HashMap<Long, Point>> nodeStores;
+
 	private static Logger logger = Logger.getLogger(Import.class.getName());
 
-	public static void importFile(String filePath, int numberOfThreads) throws FileNotFoundException
+	public static void importFile(String filePath, int numberOfThreads, int bufferCapacity) throws FileNotFoundException
 	{
 		FileInputStream pbfFile = new FileInputStream(filePath);
 		CodedInputStream input = CodedInputStream.newInstance(pbfFile);
-		DenseNodeStore store = new DenseNodeStore(50);
+		nodeStores = new ArrayList<>(numberOfThreads);
+		DenseNodeStore denseNodeStore = new DenseNodeStore(bufferCapacity);
 		DenseNodesProcessor[] denseNodesProcessors = new DenseNodesProcessor[numberOfThreads];
+		boolean denseNodesProcessingOver = false;
+		WayStore wayStore = new WayStore(bufferCapacity);
+		WayProcessor[] wayProcessors = new WayProcessor[numberOfThreads];
+		boolean wayProcessingOver = false;
 		int headerCount = 0, dataCount = 0, nodeGroups = 0, wayGroups = 0, relationGroups = 0, changesetGroups = 0, denseGroups = 0;
 		try
 		{
 			String url = "jdbc:postgresql://localhost:5432/pbftest";
 			for(int i = 0; i < numberOfThreads; ++i)
 			{
-				denseNodesProcessors[i] = new DenseNodesProcessor(i+1, store, url, "hemal", "roflolmao");
+				denseNodesProcessors[i] = new DenseNodesProcessor(i+1, denseNodeStore, url, "hemal", "roflolmao");
 				denseNodesProcessors[i].start();
+				wayProcessors[i] = new WayProcessor(i+1, wayStore, url, "hemal", "roflolmao");
 			}
 
 			while(!input.isAtEnd())
@@ -129,12 +143,56 @@ public class Import
 					}
 					else if(g.getWaysCount() > 0)
 					{
-//						System.out.println("Way group");
+						if(!denseNodesProcessingOver)
+						{
+							denseNodeStore.end();
+							System.out.println("Waiting for dense nodes processing to complete");
+							for(int i = 0; i < numberOfThreads; ++i)
+							{
+								try
+								{
+									denseNodesProcessors[i].join();
+									nodeStores.add(denseNodesProcessors[i].getNodeStore());
+								}
+								catch (InterruptedException e)
+								{
+									System.out.println("Wait for dense node processor " + (i + 1) + " interrupted");
+									--i;
+								}
+							}
+							denseNodesProcessingOver = true;
+							wayStore.setNodeStore(nodeStores);
+							for(int i = 0; i < numberOfThreads; ++i)
+							{
+								wayProcessors[i].start();
+							}
+							System.out.println("Dense nodes processing over");
+						}
 						++wayGroups;
+						System.out.println("Processing way group: " + wayGroups);
+						wayStore.put(g.getWaysList(), stringTable, granularity, latitudeOffset, longitudeOffset);
 					}
 					else if(g.getRelationsCount() > 0)
 					{
 //						System.out.println("Relation group");
+						if(!wayProcessingOver)
+						{
+							wayStore.end();
+							System.out.println("Waiting for way processing to complete");
+							for(int i = 0; i < numberOfThreads; ++i)
+							{
+								try
+								{
+									wayProcessors[i].join();
+								}
+								catch (InterruptedException e)
+								{
+									System.out.println("Wait for way processor " + (i + 1) + " interrupted");
+									--i;
+								}
+							}
+						}
+						wayProcessingOver = true;
 						++relationGroups;
 					}
 					else if(g.getChangesetsCount() > 0)
@@ -147,7 +205,7 @@ public class Import
 						++denseGroups;
 						System.out.println("Processing dense nodes group: " + denseGroups);
 						DenseNodes d = g.getDense();
-						//store.put(d, stringTable, granularity, latitudeOffset, longitudeOffset);
+						denseNodeStore.put(d, stringTable, granularity, latitudeOffset, longitudeOffset);
 					}
 				}
 				input.resetSizeCounter();
@@ -165,27 +223,27 @@ public class Import
 			System.out.println("CodedInputStream isAtEnd failed");
 			e.printStackTrace();
 		}
-		store.end();
-		System.out.println("stopped dense");
 		for(int i = 0; i < numberOfThreads; ++i)
 		{
 			try
 			{
-				denseNodesProcessors[i].join();
+				wayProcessors[i].join();
 			}
 			catch (InterruptedException e)
 			{
-				System.out.println("Thread " + (i + 1) + " was interrupted");
+				System.out.println("Way processor " + (i + 1) + " was interrupted");
 			}
 		}
-		System.out.println("Dense nodes processing over");
 	}
 
 	public static void main(String[] args)
 	{
 		try
 		{
-			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 4);
+			System.out.println("TOTAL MEM: " + Runtime.getRuntime().totalMemory());
+			System.out.println("MAX MEM: " + Runtime.getRuntime().maxMemory());
+			System.out.println("FREE MEM: " + Runtime.getRuntime().freeMemory());
+			Import.importFile("/home/hadoopuser/winGSoC17/berlin-latest.osm.pbf", 1, 100);
 		}
 		catch (FileNotFoundException e)
 		{

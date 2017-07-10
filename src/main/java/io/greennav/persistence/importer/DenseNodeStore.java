@@ -26,7 +26,7 @@ public class DenseNodeStore
 
 	public synchronized void end()
 	{
-		System.out.println("ending");
+		System.out.println("Ending dense node processing");
 		stopDenseNodeProcessors = true;
 		notifyAll();
 	}

@@ -2,7 +2,7 @@
 
 export PGPASSWORD='testpassword'
 sudo -i -u postgres createdb -O greennav greennavdb
-sudo -i -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology; CREATE EXTENSION hstore; CREATE EXTENSION postgis_sfcgal" greennavdb
+sudo -i -u postgres psql -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology; CREATE EXTENSION hstore; CREATE EXTENSION postgis_sfcgal;" greennavdb
 osm2pgsql -c -d lolax -U greennav $1 -H localhost --slim --hstore-all -l
 
 sudo -i -u postgres psql -c "ALTER TABLE planet_osm_nodes ADD COLUMN way geometry(Point, 4326);"
